@@ -31,7 +31,7 @@ impl RemoteKeypair {
     ) -> Result<Self, RemoteWalletError> {
         let pubkey = match &wallet_type {
             RemoteWalletType::Ledger(wallet) => wallet.get_pubkey(&derivation_path, confirm_key)?,
-            RemoteWalletType::Trezor(wallet) => wallet.get_pubkey(&derivation_path, confirm_key)?
+            RemoteWalletType::Trezor(wallet) => wallet.get_pubkey(&derivation_path, confirm_key)?,
         };
 
         Ok(Self {
@@ -54,8 +54,8 @@ impl Signer for RemoteKeypair {
                 .sign_message(&self.derivation_path, message)
                 .map_err(|e| e.into()),
             RemoteWalletType::Trezor(wallet) => wallet
-            .sign_message(&self.derivation_path, message)
-            .map_err(|e| e.into()),
+                .sign_message(&self.derivation_path, message)
+                .map_err(|e| e.into()),
         }
     }
 
@@ -93,6 +93,6 @@ pub fn generate_remote_keypair(
                 path,
             )?)
         }
-        _ => Err(RemoteWalletError::DeviceTypeMismatch)
+        _ => Err(RemoteWalletError::DeviceTypeMismatch),
     }
 }

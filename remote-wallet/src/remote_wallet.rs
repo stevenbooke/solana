@@ -15,13 +15,12 @@ use {
         signature::{Signature, SignerError},
     },
     std::{
-        cell::RefCell, rc::Rc, time::{Duration, Instant}
+        cell::RefCell,
+        rc::Rc,
+        time::{Duration, Instant},
     },
     thiserror::Error,
-    trezor_client::{
-        self,
-        Trezor,
-    },
+    trezor_client::{self, Trezor},
 };
 
 const HID_GLOBAL_USAGE_PAGE: u16 = 0xFF00;
@@ -83,13 +82,12 @@ impl Clone for RemoteWalletError {
             RemoteWalletError::NoDeviceFound => self.clone(),
             RemoteWalletError::Protocol(_) => self.clone(),
             RemoteWalletError::PubkeyNotFound => self.clone(),
-            RemoteWalletError::TrezorError(_) =>  self.clone(),
+            RemoteWalletError::TrezorError(_) => self.clone(),
             RemoteWalletError::UserCancel => self.clone(),
             RemoteWalletError::LocatorError(_) => self.clone(),
         }
     }
 }
-
 
 #[cfg(feature = "hidapi")]
 impl From<hidapi::HidError> for RemoteWalletError {
@@ -128,7 +126,10 @@ pub struct RemoteWalletManager {
 impl RemoteWalletManager {
     /// Create a new instance.
     #[cfg(feature = "hidapi")]
-    pub fn new(usb: Arc<Mutex<hidapi::HidApi>>, trezor_client: Option<Rc<RefCell<Trezor>>>) -> Rc<Self> {
+    pub fn new(
+        usb: Arc<Mutex<hidapi::HidApi>>,
+        trezor_client: Option<Rc<RefCell<Trezor>>>,
+    ) -> Rc<Self> {
         Rc::new(Self {
             usb,
             devices: RwLock::new(Vec::new()),
@@ -245,10 +246,15 @@ impl RemoteWalletManager {
         self.trezor_client.as_ref().map(|trezor| Rc::clone(trezor))
     }
 
-    pub fn get_trezor_wallet(&self, pretty_path: String) -> Result<Rc<TrezorWallet>, RemoteWalletError> {
-        Ok(Rc::new(TrezorWallet::new(self.get_trezor_client_clone(), pretty_path)))
+    pub fn get_trezor_wallet(
+        &self,
+        pretty_path: String,
+    ) -> Result<Rc<TrezorWallet>, RemoteWalletError> {
+        Ok(Rc::new(TrezorWallet::new(
+            self.get_trezor_client_clone(),
+            pretty_path,
+        )))
     }
-
 }
 
 /// `RemoteWallet` trait
@@ -357,14 +363,10 @@ pub fn is_valid_hid_device(usage_page: u16, interface_number: i32) -> bool {
 pub fn initialize_wallet_manager() -> Result<Rc<RemoteWalletManager>, RemoteWalletError> {
     let hidapi = Arc::new(Mutex::new(hidapi::HidApi::new()?));
     let trezor_client = match trezor_client::unique(false) {
-        Ok(mut trezor) => {
-            match trezor.init_device(None) {
-                Ok(_) => {
-                    Some(Rc::new(RefCell::new(trezor)))
-                },
-                Err(_) => None,
-            }
-        }
+        Ok(mut trezor) => match trezor.init_device(None) {
+            Ok(_) => Some(Rc::new(RefCell::new(trezor))),
+            Err(_) => None,
+        },
         Err(_) => None,
     };
     Ok(RemoteWalletManager::new(hidapi, trezor_client))
