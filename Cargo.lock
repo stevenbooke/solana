@@ -6907,7 +6907,6 @@ name = "solana-remote-wallet"
 version = "2.0.0"
 dependencies = [
  "assert_matches",
- "bitcoin",
  "console",
  "dialoguer",
  "hidapi",
